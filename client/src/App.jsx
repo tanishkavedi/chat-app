@@ -19,6 +19,10 @@ function App() {
   setMessages(history);
 });
 
+socket.on("receive_message", (data) => {
+    setMessages((prev) => [...prev, { ...data, type: "message" }]);
+  });
+
     socket.on("user_joined", (data) => {
       setMessages((prev) => [...prev, { ...data, type: "system" }]);
     });
@@ -32,12 +36,12 @@ function App() {
     });
 
     return () => {
+      socket.off("message_history");
       socket.off("receive_message");
       socket.off("user_joined");
       socket.off("user_left");
       socket.off("room_users");
-      socket.off("message_history");
-      socket.off("receive_message");
+     
     };
   }, []);
 
@@ -200,7 +204,7 @@ function App() {
               );
             }
 
-            const isOwn = msg.id === socket.id;
+            const isOwn = msg.username === username;
 
             return (
               <div
