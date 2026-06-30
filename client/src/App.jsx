@@ -15,9 +15,9 @@ function App() {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    socket.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, { ...data, type: "message" }]);
-    });
+    socket.on("message_history", (history) => {
+  setMessages(history);
+});
 
     socket.on("user_joined", (data) => {
       setMessages((prev) => [...prev, { ...data, type: "system" }]);
@@ -36,6 +36,8 @@ function App() {
       socket.off("user_joined");
       socket.off("user_left");
       socket.off("room_users");
+      socket.off("message_history");
+      socket.off("receive_message");
     };
   }, []);
 
