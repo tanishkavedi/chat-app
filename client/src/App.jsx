@@ -6,13 +6,23 @@ const socket = io("http://localhost:5001");
 const ROOMS = ["General", "React", "Node.js", "Career", "Random"];
 
 function App() {
-  const [username, setUsername] = useState("");
-  const [room, setRoom] = useState("General");
-  const [joined, setJoined] = useState(false);
+  const [username, setUsername] = useState(() => sessionStorage.getItem("chatUsername") || "");
+const [room, setRoom] = useState(() => sessionStorage.getItem("chatRoom") || "General");
+const [joined, setJoined] = useState(() => sessionStorage.getItem("chatJoined") === "true");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const messagesEndRef = useRef(null);
+
+
+
+  useEffect(() => {
+  if (joined && username) {
+    socket.emit("join_room", { username, room });
+  }
+}, []);
+
+
 
   useEffect(() => {
     socket.on("message_history", (history) => {
@@ -50,10 +60,13 @@ socket.on("receive_message", (data) => {
   }, [messages]);
 
   const handleJoin = () => {
-    if (!username.trim()) return;
-    socket.emit("join_room", { username, room });
-    setJoined(true);
-  };
+  if (!username.trim()) return;
+  socket.emit("join_room", { username, room });
+  setJoined(true);
+  sessionStorage.setItem("chatUsername", username);
+  sessionStorage.setItem("chatRoom", room);
+  sessionStorage.setItem("chatJoined", "true");
+};
 
   const handleSend = () => {
     if (!message.trim()) return;
@@ -174,11 +187,14 @@ socket.on("receive_message", (data) => {
             <p className="text-xs text-gray-500">{users.length} members online</p>
           </div>
           <button
-            onClick={() => {
-              setJoined(false);
-              setMessages([]);
-              setUsers([]);
-            }}
+  onClick={() => {
+    setJoined(false);
+    setMessages([]);
+    setUsers([]);
+    sessionStorage.removeItem("chatUsername");
+    sessionStorage.removeItem("chatRoom");
+    sessionStorage.removeItem("chatJoined");
+  }}
             className="text-xs text-gray-500 hover:text-red-400 transition-colors"
           >
             Leave Room
